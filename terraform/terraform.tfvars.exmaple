@@ -1,0 +1,5 @@
+# アプリケーション設定
+app_name   = "sqs-go-runner"
+image_tag  = "latest"
+region     = "ap-northeast-1"
+environment = "production"

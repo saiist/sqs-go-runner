@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: sqs-go-runner-localstack
+    ports:
+      - "4566:4566"  # LocalStack APIエンドポイント
+    environment:
+      - SERVICES=sqs
+      - DEBUG=1
+      - AWS_DEFAULT_REGION=ap-northeast-1
+    volumes:
+      - "./init-scripts:/etc/localstack/init/ready.d"
+  
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sqs-go-runner-app
+    depends_on:
+      - localstack
+    environment:
+      - SQS_QUEUE_URL=http://localstack:4566/000000000000/sqs-go-runner-queue
+      - SQS_REGION=ap-northeast-1
+      - POLLING_WAIT_TIME=20
+      - MAX_MESSAGES=10
+      - VISIBILITY_TIMEOUT=30
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=ap-northeast-1
