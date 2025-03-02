@@ -74,7 +74,7 @@ resource "aws_sqs_queue" "message_queue" {
   message_retention_seconds  = 1209600 # 14日間
   receive_wait_time_seconds  = 20      # ロングポーリング(20秒)
   visibility_timeout_seconds = 60      # 処理タイムアウト(60秒)
-  
+
   # デッドレターキューの設定
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.dead_letter_queue.arn
@@ -88,7 +88,7 @@ resource "aws_sqs_queue" "message_queue" {
 resource "aws_sqs_queue" "dead_letter_queue" {
   name                      = "${var.app_name}-dlq"
   message_retention_seconds = 1209600 # 14日間
-  
+
   tags = local.tags
 }
 
@@ -138,7 +138,7 @@ resource "aws_iam_policy" "sqs_access_policy" {
           "sqs:ListQueues",
           "sqs:ChangeMessageVisibility"
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = [
           aws_sqs_queue.message_queue.arn,
           aws_sqs_queue.dead_letter_queue.arn
@@ -176,7 +176,7 @@ resource "null_resource" "docker_push" {
   }
 }
 
-# App Runnerサービスの作成
+# App Runnerサービスの作成（パブリックモード）
 resource "aws_apprunner_service" "app" {
   service_name = var.app_name
   depends_on   = [aws_ecr_repository_policy.app_policy, null_resource.docker_push]
@@ -188,10 +188,10 @@ resource "aws_apprunner_service" "app" {
       image_configuration {
         port = "8080"
         runtime_environment_variables = {
-          SQS_QUEUE_URL     = aws_sqs_queue.message_queue.url
-          SQS_REGION        = var.region
-          POLLING_WAIT_TIME = "20"
-          MAX_MESSAGES = "10"
+          SQS_QUEUE_URL      = aws_sqs_queue.message_queue.url
+          SQS_REGION         = var.region
+          POLLING_WAIT_TIME  = "20"
+          MAX_MESSAGES       = "10"
           VISIBILITY_TIMEOUT = "30"
         }
       }
@@ -205,8 +205,9 @@ resource "aws_apprunner_service" "app" {
   }
 
   instance_configuration {
-    cpu    = "1 vCPU"
-    memory = "2 GB"
+    cpu               = "1 vCPU"
+    memory            = "2 GB"
+    instance_role_arn = aws_iam_role.apprunner_access_role.arn
   }
 
   tags = local.tags
@@ -234,7 +235,7 @@ output "dead_letter_queue_url" {
 }
 
 output "deployment_instructions" {
-  value = <<-EOT
+  value       = <<-EOT
     App Runner サービスのセットアップが完了しました。
     
     サービスURL: ${aws_apprunner_service.app.service_url}
@@ -247,6 +248,8 @@ output "deployment_instructions" {
     2. .github/workflows/deploy.yml ファイルを追加
     
     自動デプロイは ECR への新しいイメージのプッシュで自動的に開始されます（auto_deployments_enabled = true）
+
+    ※App Runnerはパブリックモードで実行されます（インターネットからアクセス可能）
   EOT
   description = "デプロイ手順"
 }

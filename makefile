@@ -1,7 +1,7 @@
 # SQS Go Runner Makefile
 
 # デフォルトのAWSリージョン
-AWS_REGION ?= ap-northeast-1
+AWS_REGION = ap-northeast-1
 
 # LocalStack設定
 LOCALSTACK_URL = http://localhost:4566
@@ -40,6 +40,7 @@ help:
 	@echo "  $(GREEN)make tf-plan$(NC)       - デプロイ計画を表示"
 	@echo "  $(GREEN)make tf-apply$(NC)      - AWSリソースをデプロイ"
 	@echo "  $(GREEN)make tf-destroy$(NC)    - AWSリソースを削除"
+	@echo "  $(GREEN)make tf-fmt$(NC)        - Terraformファイルをフォーマット"
 	@echo ""
 	@echo "$(YELLOW)ユーティリティ:$(NC)"
 	@echo "  $(GREEN)make clean$(NC)         - ビルド成果物を削除"
@@ -153,3 +154,9 @@ tf-apply:
 tf-destroy:
 	@echo "$(GREEN)AWSリソースを削除しています...$(NC)"
 	@cd terraform && terraform destroy
+
+# Terraformファイルをフォーマット
+.PHONY: tf-fmt
+tf-fmt:
+	@echo "$(GREEN)Terraformファイルをフォーマットしています...$(NC)"
+	@cd terraform && terraform fmt
