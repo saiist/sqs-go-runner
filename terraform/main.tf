@@ -24,6 +24,18 @@ variable "environment" {
   default     = "production"
 }
 
+variable "aws_access_key_id" {
+  description = "AWS Access Key ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_secret_access_key" {
+  description = "AWS Secret Access Key"
+  type        = string
+  sensitive   = true
+}
+
 locals {
   tags = {
     Name        = var.app_name
@@ -193,6 +205,9 @@ resource "aws_apprunner_service" "app" {
           POLLING_WAIT_TIME  = "20"
           MAX_MESSAGES       = "10"
           VISIBILITY_TIMEOUT = "30"
+          AWS_ACCESS_KEY_ID  = var.aws_access_key_id
+          AWS_SECRET_ACCESS_KEY = var.aws_secret_access_key
+          AWS_DEFAULT_REGION    = var.region
         }
       }
       image_identifier      = "${aws_ecr_repository.app.repository_url}:${var.image_tag}"
